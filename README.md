@@ -20,6 +20,6 @@ setenv('DATA_ULTRASOUND','D:\data\ultrasound\sim')
 ```
 Running the code will take several hours, but will generate the following B-mode image simulating with Field II what an ultrasound scanner generates when scanning a moving phantom.
 
-![Rendered images of what Field II simulation produces](prj/us_sim/outputphantomFieldII_mono_translationTrackCyst.gif)
+![Rendered images of what Field II simulation produces](https://github.com/potto216/matlab/prj/us_sim/outputphantomFieldII_mono_translationTrackCyst.gif)
 
 
