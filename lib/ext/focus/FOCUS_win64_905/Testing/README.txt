@@ -1,0 +1,1 @@
+The files in this directory are not officially supported. Please be aware that there may be undocumented changes to them between releases or they may be removed from FOCUS altogether.

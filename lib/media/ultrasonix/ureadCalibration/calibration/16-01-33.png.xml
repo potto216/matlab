@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<object xmlns="">
+
+  <ID>16-01-33.png</ID>
+
+  <application>L14-5/38-MSK-[SWRF]</application>
+
+  <time day="28" hour="16" minute="1" month="4" second="33" year="2014"/>
+
+  <examtype>MSK</examtype>
+
+  <noclipping>0</noclipping>
+
+  <fullscreen>0</fullscreen>
+
+  <imagecount>2</imagecount>
+
+  <regions>
+    <region flag="0" mode="0" name="B">
+      <type>0</type>
+      <xpos>40</xpos>
+      <ypos>65</ypos>
+      <width>640</width>
+      <height>480</height>
+      <DeltaPerPixelX unit="µm">63.000000</DeltaPerPixelX>
+      <DeltaPerPixelY unit="µm">63.000000</DeltaPerPixelY>
+    </region>
+  </regions>
+
+  <probe>
+    <name>L14-5/38</name>
+    <type>2</type>
+    <elements>128</elements>
+    <pitch>300</pitch>
+    <curve>0</curve>
+    <fcentre>9500000</fcentre>
+    <bandwidth>9000000</bandwidth>
+  </probe>
+
+  <zones>
+    <zone>
+      <xpos>68</xpos>
+      <ypos>25</ypos>
+      <width>228</width>
+      <height>25</height>
+    </zone>
+    <zone>
+      <xpos>68</xpos>
+      <ypos>0</ypos>
+      <width>228</width>
+      <height>25</height>
+    </zone>
+  </zones>
+
+</object>

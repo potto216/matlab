@@ -1,0 +1,491 @@
+Examples using Voodoo in LINUX
+../voodoo -d0 -S1 -F 3000 -L 3335 -i points.txt --est-method=FREEMOVE --final-bundle-adjust=1 -c camera.txt --batch-mode --fm-bundle-update-method=onlyfinal 8_%d.tga
+bin/voodoo -F 0 -L19 -S1 -d1 sample_image_sequence/tripod_rotation/uni.%02d.tga
+
+Examples using Voodoo in Windows
+voodoo -F=1 -L=19 -S=1 -d=1 E:\Users\potto\data\s001_p003_t01\track\processStream\standard\tks_basic\tkl_regionAll\fpt_cameraTrackerVoodoo\@private\data\images\forward\image_%d.png
+
+
+http://www.viscoda.com/index.php/en/products/non-commercial/voodoo-camera-tracker
+http://www.digilab.uni-hannover.de/download.html
+
+----------------------------------------------------------------------------------------------------------
+When running under Windows we get for help:
+----------------------------------------------------------------------------------------------------------
+E:\Users\potto\ultraspeck\workingFolders\potto\MATLAB\simulations\fieldII\Femoris>voodoo --usage=1
+parsing Command Line of voodoo: 0 file(s) 1 option(s)
+c_ArgParser::Parse: failed for option: -usage key: (0) with argument: 1
+voodoo <options> <image file template>
+
+options:
+-------------- sequence options --------------
+--first-frame   -F=UNSIGNED
+--last-frame    -L=UNSIGNED
+--step-frame    -S=UNSIGNED
+--image-format  -f=UNSIGNED
+--de-interlace  -d=UNSIGNED
+--init-camera   -I=STRING
+-------------- detection options --------------
+--detect-method=STRING
+--fpoints       -p=STRING
+--save-fpoints  -i
+harris detector options:
+--corner-count-max=UNSIGNED
+--gauss-sigma=FLOAT
+--relative-minimum=FLOAT
+--scale-factor=FLOAT
+--adaptive
+--adaptive-window-size=UNSIGNED
+--density-thresh=FLOAT
+--corner-count-low=FLOAT
+--local-max-window-size=UNSIGNED
+-------------- correspondence analysis options --------------
+--corranal-method=STRING
+cross correlation options:
+--fcorr-window  -s=INT,INT,INT,INT
+--threshold     -t=DOUBLE
+--win-filter    -w=UNSIGNED,UNSIGNED
+--save-fcorr    -o=STRING
+--corr-method=STRING
+--guidedmatching=UNSIGNED
+--gm-regionsize=DOUBLE
+klt tracking options:
+--klt-fcorr-window=INT
+--klt-corner-count=UNSIGNED
+--klt-min-dist=UNSIGNED
+--klt-win-filter=UNSIGNED,UNSIGNED
+--klt-min-eigenvalue=UNSIGNED
+--klt-min-determinant=FLOAT
+--klt-min-displacement=FLOAT
+--klt-max-iterations=UNSIGNED
+--klt-max-residue=FLOAT
+synthetic correlator options:
+--sc-num-of-features=UNSIGNED
+--sc-radius=DOUBLE
+--sc-radius2=DOUBLE
+--sc-percent-r2=UNSIGNED
+--sc-rot=DOUBLE,DOUBLE,DOUBLE
+--sc-zoom=DOUBLE
+--sc-zoom-bounds=DOUBLE,DOUBLE
+--sc-offset=DOUBLE,DOUBLE
+--sc-dev=DOUBLE
+--sc-percent-outlier=DOUBLE
+--sc-max-outlier-size=DOUBLE
+--sc-trans=DOUBLE,DOUBLE,DOUBLE
+--sc-distribute=UNSIGNED
+--sc-set-3d-coord
+--sc-preset-camera
+--sc-features-on-grid
+--sc-radial-distortion=DOUBLE,DOUBLE
+--sc-principal-point=DOUBLE,DOUBLE
+--sc-set-fp-covar
+--sc-cube
+--sc-fixed-seed=UNSIGNED
+-------------- outlier elimination options  --------------
+--outlier-detector=STRING
+random sampling options:
+--rs-error-distance-max -e=DOUBLE
+--rs-rand-samples-max   -r=UNSIGNED
+--rs-rand-samples-min=UNSIGNED
+--rs-limit-support      -l=DOUBLE
+--rs-from-supported-subset=BOOL
+--rs-adaptiv-max=BOOL
+--rs-thresh-crit=STRING
+--rs-expected-stddev    -E=DOUBLE
+--sac-method=STRING
+sample calculation options:
+--sac-delta-min=DOUBLE
+--sac-max-iter=UNSIGNED
+--sac-max-zoom-iter=DOUBLE
+--sac-max-angle-iter=DOUBLE
+--sac-max-iter-worse=UNSIGNED
+--sac-max-num-solutions=UNSIGNED
+--sac-max-start-depth=UNSIGNED
+-------------- estimation options --------------
+--est-method=STRING
+rk estimation options:
+--track-3d-links        -U=STRING
+--est-focal=BOOL
+--est-principal-point=BOOL
+--est-radial-distortion=BOOL,BOOL
+--est-rot-axes-offset=BOOL
+--est-rot-axes-rtk-model=BOOL
+--est-rot-3d-point-distance=FLOAT
+--variant-rad-dist=BOOL
+--h-matrix-dist-measure=UNSIGNED
+--rad-dist-bounds
+--abs-max-k3-k5=FLOAT,FLOAT
+--min-displacement=FLOAT
+--min-support-ratio=FLOAT
+--final-bundle-adjust=BOOL
+--final-rad-dist-estimation=BOOL
+free move estimation options:
+--fm-estimation-strategy=STRING
+--fm-bundle-adjust-method=STRING
+--fm-keyframe-selection-method=STRING
+--fm-manual-keyframe=UNSIGNED
+--fm-est-focal=STRING
+--fm-gric-lambda=DOUBLE,DOUBLE,DOUBLE
+--fm-maxmaperror=DOUBLE
+--fm-mindisp=DOUBLE
+--fm-bundle-update-method=STRING
+--fm-manual-bunupdate=UNSIGNED
+--fm-keyframe-min-corr=DOUBLE
+--fm-min-fpoints=UNSIGNED
+levenberg marquardt options:
+--lm-rel-tol=DOUBLE
+--lm-max-iter-tol=UNSIGNED
+--lm-max-iter=UNSIGNED
+--lm-max-bad-iter=UNSIGNED
+-------------- saving results options --------------
+--save-camera   -c=STRING
+--save-pnt      -z=STRING
+--dbase-dir-save-soft   -D=STRING
+--scene-save-soft       -N=STRING
+-------------- general options --------------
+--verbose       -v=UNSIGNED
+--max-cached-images     -M=INT
+--developer-flag        -a
+--batch-mode
+--preset-camera -P=STRING
+--preset-fpoint -B=STRING
+----------------------------------------------------------------------------------------------------------
+
+
+
+----------------------------------------------------------------------------------------------------------
+Below is for Linux and obtained from http://www.cs.washington.edu/research/projects/grail76/aseem/feng/tmp.txt
+Usage: voodoo [OPTION...] <image file template>
+----------------------------------------------------------------------------------------------------------
+ -------------- sequence options -------------- 
+  -d, --de-interlace=UNSIGNED   de-interlace input frame:  0 -> disabled, 1 ->
+                             on even field (maintain even lines and interpolate
+                             odd lines / upper field first) or 2 -> on odd
+                             field (maintain odd lines and interpolate even
+                             lines / lower field first) (def.: 0)
+  -f, --image-format=UNSIGNED   input image sequence is frame (0), even field
+                             (1) or odd field (2) (def. 0)
+  -F, --first-frame=UNSIGNED first frame of sequence (def. 0)
+  -I, --init-camera=STRING   initial camera parameter
+  -L, --last-frame=UNSIGNED  last frame of sequence (def. 0)
+  -S, --step-frame=UNSIGNED  frame step (def. 1)
+
+ -------------- detection options -------------- 
+      --detect-method=STRING select detector type: "feoerstner", "harris",
+                             "read", def.: harris
+  -i, --save-fpoints         save feature point files with filenames specified
+                             with the -p option 
+
+  -p, --fpoints=STRING       feature points file template
+
+ harris detector options: 
+      --adaptive             adaptive mode (def.: disabled), ,will be also
+                             enabled, if one of adaptive-window-size,
+                             density-thresh or corner-count-low parameter is
+                             specified
+      --adaptive-window-size=UNSIGNED
+                             adaptive window size for density (def.: 32)
+      --corner-count-low=FLOAT   adaptive automatically accept the top (def.:
+                             400)
+      --corner-count-max=UNSIGNED
+                             maximum corner count (def.: 900)
+      --density-thresh=FLOAT adaptive density threshold (corners in 32x32),
+                             accept corners between low and max if the local
+                             density is less than thisdensity means number of
+                             corners in a 32x32 window (def.: 0.5)
+      --gauss-sigma=FLOAT    Gaussian sigma, def.: 0.7
+      --local-max-window-size=UNSIGNED
+                             window size for maximum search within CRF (def.:
+                             9)
+      --relative-minimum=FLOAT   expected ratio lowest/max corner strength
+                             (def.: 0.00001)
+      --scale-factor=FLOAT   auto-correlation scale factor (def.: 0.04)
+
+ -------------- correspondence analysis options --------------
+      --corranal-method=STRING   select an correspondence analysis method.
+                             Available are: "NCC", "KLT", "SYN" (def.: is
+                             "KLT")
+
+ cross correlation options:
+      --corr-method=STRING   select a correlation method (parameter isn't case
+                             sensitive). Available are: "FastCC" for fast cross
+                             correlation,"FullCC" for full block cross
+                             correlation,"FastNCC" for fast normalized cross
+                             correlation, "FullNCC" for full block normalized
+                             cross correlation (def.: is "FastCC")
+      --gm-regionsize=DOUBLE size of search region for guided matching in pel
+                             (def.: )
+      --guidedmatching=UNSIGNED   value = 0: disable guided matching, value =
+                             X: enable guided matching if available (use X
+                             times in a loop with outlier detection) (def.: 1)
+  -o, --save-fcorr=STRING    save list of correspondence to file template
+  -s, --fcorr-window=INT,INT,INT,INT
+                             window size for correspondence search (def.:
+                             -50.0,50.0,-50.0,50.0)
+  -t, --threshold=DOUBLE     threshold for 'good' feature correspondence, range
+                             [0.0, 1.0] (def.: )
+  -w, --win-filter=UNSIGNED,UNSIGNED
+                             window size of the convolution filter , (this
+                             window is used for matching cross-correspondence
+                             calculation)  (def.: )
+
+ klt tracking options:
+      --klt-corner-count=UNSIGNED
+                             sets the number of fpoints (def.: 1000)
+      --klt-fcorr-window=INT,INT,INT,INT
+                             window size for correspondence search (def.:
+                             -50.0,50.0,-50.0,50.0)
+      --klt-max-iterations=UNSIGNED
+                             maximum number of iterations allowed when tracking
+                             (def.: 10)
+      --klt-max-residue=FLOAT   maximum residue, averaged per pixel, allowed
+                             when tracking (def.: 50.0)
+      --klt-min-determinant=FLOAT
+                             minimum allowable determinant before a feature is
+                             declared lost (def.: 0.01)
+      --klt-min-displacement=FLOAT
+                             minimum displacement, in pixels, necessary to stop
+                             the iterative tracker and declare tracking
+                             successful (def.: 0.1)
+      --klt-min-dist=UNSIGNED   minimum distance between each feature being
+                             selected, in pixels (def.: 10)
+      --klt-min-eigenvalue=UNSIGNED
+                             minimum allowable eigenvalue for new features
+                             being selected (def.: 150)
+      --klt-win-filter=UNSIGNED,UNSIGNED
+                             window size of the filter window, in pixels (def.:
+                             7,7)
+
+ synthetic correlator options: 
+      --sc-cube              use a cube instead of a sphere
+      --sc-dev=DOUBLE        standard deviation of the 2D feature points in pel
+                             (def. 0)
+      --sc-distribute=UNSIGNED   value = 1: distribute 3D coordinates
+                             in-between the two radii, value = 0: place 3D
+                             coordinates on the two radii. (def.: 1)
+      --sc-features-on-grid  place 3D feature points on a spherical grid (no
+                             random distribution)
+      --sc-fixed-seed=UNSIGNED   set a fixed seed for synthetic experiments (0
+                             for a random seed) (def. 1937)
+      --sc-max-outlier-size=DOUBLE
+                             maximal size of generated outlier in pel (def.
+                             15.0)
+      --sc-num-of-features=UNSIGNED
+                             The number of synthetic feature point to create.
+                             The feature points are randomly distributed on a
+                             sphere (def.: 10000)
+      --sc-offset=DOUBLE,DOUBLE   offset for the pan,tilt axis in [mm] (def.:
+                             0,0)
+      --sc-percent-outlier=DOUBLE
+                             percentage of generated outliers (def. 0.0)
+      --sc-percent-r2=UNSIGNED   put UNSIGNED percent of all feature points on
+                             the sphere with the radius specified via
+                             --sc-radius2
+      --sc-preset-camera     use preset cameras (loaded with option -P) for
+                             synthetic correlator
+      --sc-principal-point=DOUBLE,DOUBLE
+                             principal point x,y in [pel] for the synthetic
+                             correlator (def.: 0.0,0.0)
+      --sc-radial-distortion=DOUBLE,DOUBLE
+                             radial distortion k3 in [mm^-2] and k5 in [mm^-4]
+                             for the synthetic correlator (def.: 0.0,0.0)
+      --sc-radius=DOUBLE     radius of the feature point sphere in mm (def.:
+                             100000)
+      --sc-radius2=DOUBLE    second radius of the feature point sphere in mm
+                             (def.: same as --sc-radius)
+      --sc-rot=DOUBLE,DOUBLE,DOUBLE
+                             incremental pan,tilt,roll in degrees (def.:
+                             0,0,0)
+      --sc-set-3d-coord      calculate and set 3D coordinates of each synthetic
+                             feature
+      --sc-set-fp-covar      set covariance matrices of generated feature
+                             points
+      --sc-trans=DOUBLE,DOUBLE,DOUBLE
+                             incremental translation x, y, z in [mm] (def.:
+                             0,0,0)
+      --sc-zoom=DOUBLE       incremental zoom (def.: 0)
+      --sc-zoom-bounds=DOUBLE,DOUBLE
+                             def (0.5,2.0)
+
+ -------------- outlier elimination options  --------------
+      --outlier-detector=STRING   select an outlier elimination method.
+                             Available are: "RS", "KNOWN"(def.: is "RS")
+
+ random sampling options: 
+  -e, --rs-error-distance-max=DOUBLE
+                             maximum error distance in pel (def.: 0.8)
+  -E, --rs-expected-stddev=DOUBLE
+                             expected standard deviation in pel (def.: 0.3)
+  -l, --rs-limit-support=DOUBLE   minimum support (ratio) (def.: 0.99)
+  -r, --rs-rand-samples-max=UNSIGNED
+                             maximum number of random searches for sampling
+                             (def.: 4000)
+      --rs-adaptiv-max=BOOL  enable/disable automatic adaptiv selection of
+                             maximum number of random searches (def. 1 for
+                             enabled)
+      --rs-from-supported-subset=BOOL
+                             enable/disable random sampling from a subset with
+                             correspondence, which were supported in the
+                             previous image pair (def. 0 for disabled)
+      --rs-rand-samples-min=UNSIGNED
+                             minimum number of random searches for sampling
+                             (def.: 0)
+      --rs-thresh-crit=STRING   "ED" = Euclidian distance, "SD" = Expected
+                             standard deviation, "MD" = Mahalanobis distance
+                             (def. "ED")
+      --sac-method=STRING    select an random sampler method. Available are:
+                             "depend", "PTRZ","HMAT", "TRANS", "FMAT", (def.:
+                             "depend", depends on the estimation method)
+
+ sample calculation options:
+      --sac-delta-min=DOUBLE Minimum distance in pel for a sample solution
+                             (def.: 1e-6)
+      --sac-max-angle-iter=DOUBLE
+                             Maximum acceptable incremental angle in degrees
+                             (def.: 360)
+      --sac-max-iter=UNSIGNED   Maximum number of iteration steps to find a
+                             sample solution (def.: 15)
+      --sac-max-iter-worse=UNSIGNED
+                             Maximum number of iteration steps without
+                             improvement (def.: 3)
+      --sac-max-num-solutions=UNSIGNED
+                             Maximum number of solutions per sample to find
+                             (def.: 4)
+      --sac-max-start-depth=UNSIGNED
+                             Maximum level in the sample solution search tree,
+                             where a new branch will be opened (def.: 5)
+      --sac-max-zoom-iter=DOUBLE   Maximum acceptable incremental zoom (def.:
+                             1000.0)
+
+ -------------- estimation options --------------
+      --est-method=STRING    select an estimation method. Available are: "RK",
+                             "FREEMOVE" (def.: is "RK")
+
+ rk estimation options: 
+      --abs-max-k3-k5=FLOAT,FLOAT
+                             set the values of absolute maximum values of lens
+                             distortion K3 [pel^-2] and K5 [pel^-4] (In [pel],
+                             because this maximum values shall be specified
+                             independent on pixel sizes). (def. 1e-3, 1e-6)
+      --est-focal=BOOL       enable/disable estimation of camera focal length
+                             (def.: 1 (enabled))
+      --est-principal-point=BOOL   enable/disable estimation of principal point
+                             of the camera (def.: 0 (disabled))
+      --est-radial-distortion=BOOL,BOOL
+                             enable/disable estimation of radial distortion (K3
+                             and K5) of the camera lens (def.: 1,0 (enabled,
+                             disabled))
+      --est-rot-3d-point-distance=FLOAT
+                             set the mean distance of 3D points, in the case of
+                             rotation estimation and enabled rotation axes
+                             offset estimation to use as global scale factor
+                             (def. 10000 [mm])
+      --est-rot-axes-offset=BOOL   enable/disable estimation of the rotation
+                             axes offsets, def.: 0 (disabled)
+      --est-rot-axes-rtk-model=BOOL
+                             enabled/disable the RTK estimator in the final
+                             bundle adjustment, def.: 0 (disabled)
+      --final-bundle-adjust=BOOL   enable/disable the final bundle adjust
+                             (def.: enable)
+      --final-rad-dist-estimation=BOOL
+                             enable/disable the final radial distortion
+                             estimation (def.: disable)
+      --h-matrix-dist-measure=UNSIGNED
+                             select distance measure for H-Matrix estimation:
+                             0: symmetric error in successive images,  1: only
+                             error in first image, 2: only error in second
+                             image (def.: 0)
+      --min-displacement=FLOAT   minimum feature point displacement to
+                             determine key frame to estimate intrinsics
+      --min-support-ratio=FLOAT   minimum number of inlier correspondences to
+                             estimate intrinsics
+      --rad-dist-bounds      enable the limitation of estimated lens distortion
+                             to absolute maximum values (def. disabled)
+  -U, --track-3d-links=STRING   Specifies how 3d feature points are tracked
+                             back. "none" means no back tracking, "supported"
+                             means track back only via supported
+                             correspondences, "all" means track via all
+                             correspondences (def.: all)
+      --variant-rad-dist=BOOL   enable/disable time variant radial distortion
+                             for estimation, def.: 1 (r3, k5 may be time
+                             varying)
+
+ free move estimation options: 
+      --fm-bundle-adjust-method=STRING
+                             select optimizer method for bundle adjustment.
+                             Available are: "interleave", "reduced" and
+                             "sparse" (def.: "sparse")
+      --fm-bundle-update-method=STRING
+                             select method to limit number of images for bundle
+                             adjustment. Available are: "unlimited", "manual",
+                             "minimal", "adaptiv", "onlyfinal" and "never"
+                             (def.: "never")
+      --fm-est-focal=STRING  select method for  estimation of camera focal
+                             length. Available are: "fixed", "constant",
+                             "variable" (def.: "constant")
+      --fm-estimation-strategy=STRING
+                             select optimizer method estimation strategy for
+                             bundle adjustment. Available are: "incremental",
+                             "hierarchical" and "preset" (def.: "incremental")
+      --fm-gric-lambda=DOUBLE,DOUBLE,DOUBLE
+                             the three lambdas of Torr's GRIC def.:
+                             8.0,4.0,2.0
+      --fm-keyframe-min-corr=DOUBLE
+                             Minimal percentage of remaining correspondences
+                             for automatic keyframe selection (def.: 0.6)
+      --fm-keyframe-selection-method=STRING
+                             select method for keyframe selection. Available
+                             are: "manual", "covariance", "gibson", "rtco" and
+                             "gric" (def.: "gric")
+      --fm-manual-bunupdate=UNSIGNED
+                             manually select the number of previous images to
+                             perform incremental bundle adjustment (def.: 10)
+      --fm-manual-keyframe=UNSIGNED
+                             manually select a keyframe every Nth frame (def.:
+                             1)
+      --fm-maxmaperror=DOUBLE   the maximum mean reprojection error of one 3D
+                             point. If the maximum is exceeded the 3D point is
+                             removed.
+      --fm-min-fpoints=UNSIGNED   minimum number of fpoints in a track to
+                             generate a 3D FPoint (def.: 3)
+      --fm-mindisp=DOUBLE    the minimum displacement needed before a 3D point
+                             is calculated. The displacement has to be caused
+                             be translational camera movement, contributions
+                             cause by rotation are compensated.
+
+ levenberg marquardt options:
+      --lm-max-bad-iter=UNSIGNED   max. number of bad iteration steps (def.: 8)
+                            
+      --lm-max-iter=UNSIGNED max. number of iteration steps (def.: 20)
+      --lm-max-iter-tol=UNSIGNED   max. number of iteration steps within the
+                             given tolerance (def.: 2)
+      --lm-rel-tol=DOUBLE    relative tolerance in mm. (def.: 1e-3)
+
+ -------------- saving results options -------------- 
+  -c, --save-camera=STRING   save cameras to file template
+  -D, --dbase-dir-save-soft=STRING
+                             set database directory for softimage
+  -N, --scene-save-soft=STRING   save camera path in softimage format
+
+ -------------- general options -------------- 
+  -a, --developer-flag       enables all research projects even if they are not
+                             ready for distribution (def.: don't)
+      --batch-mode           run tracking in batchmode, doesn't open any
+                             windows (def.: disabled)
+  -B, --preset-fpoint=STRING load and set preset feature points to all input
+                             images (string is a file template, numbers can be
+                             specified e.g. #, ## or %03d)
+  -M, --max-cached-images=INT   limits the maximum number of cached images. All
+                             images above will be reloaded from disk (def. 100)
+                            
+  -P, --preset-camera=STRING load and set preset camera to all input images
+                             (string is a file template, numbers can be
+                             specified e.g. #, ## or %03d)
+  -v, --verbose=UNSIGNED     verbose, The larger the level the more information
+                             is printed out (def.: 0)
+
+  -?, --help                 Give this help list
+      --usage                Give a short usage message
+
+Mandatory or optional arguments to long options are also mandatory or optional
+for any corresponding short options.

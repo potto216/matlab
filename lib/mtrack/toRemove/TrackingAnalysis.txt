@@ -1,0 +1,332 @@
+        
+        function [totalPtDelta_rc, sourcePtDelta_rc]=genTrackAdaptive(this,frameIndex,useAllArea,trackDirection,filterConditions)
+            error('This function needs to be fixed before using');
+            if isempty(frameIndex)
+                frameIndex=(1:(this.dataBlockObj.size(3)-2));
+            else
+                %do nothing
+            end
+            
+            %[sourcePlotFormatList,sourceLinePlotFormatList]= this.loadSourceList(frameIndex);
+            
+            
+            d=this.nodeDB(this.defaultNameIndex).data;
+            switch(trackDirection)
+                case 'forward'
+                    trackFrameList=d.trackList(frameIndex);
+                    sourceFrameTrackList=d.sourceTrackList(frameIndex);
+                    sourceNameList=cellfun(@(x) x.name,regexp(d.sourceFilenameList,'\\(?<name>\w+)\\results.mat$','names'),'UniformOutput',false);
+                case 'backward'
+                    trackFrameList=d.trackListBackward(frameIndex);
+                    sourceFrameTrackList=d.sourceTrackListBackward(frameIndex);
+                    sourceNameList=cellfun(@(x) x.name,regexp(d.sourceFilenameList,'\\(?<name>\w+)\\results.mat$','names'),'UniformOutput',false);
+                    
+                otherwise
+                    error(['Unsupported track direction of ' trackDirection]);
+            end
+            [sourcePlotFormatList,sourceLinePlotFormatList]=  getPlotMarkers(length(sourceNameList));
+            
+            if ~useAllArea
+                error('Fix here');
+                %filterTrackListAdaptive(this,trackList,sourceFrameTrackList,region,filterConditions,sourceNameList)
+                [trackFrameList, filterInfo]=filterTrackListAdaptive(this,trackFrameList,d.regionMod,filterConditions,sourceNameList,d.metainformationTrackLis);
+                for ii=1:length(sourceFrameTrackList)
+                    sourceFrameTrackList(ii).pt_rc(:,~filterInfo(ii).validIndexesFromOriginal)=[];
+                end
+            else
+                %do nothing
+            end
+            %% throw out tracks that don't meet
+            
+            
+            %% source list
+            if isfield(d,'sourceTrackList')
+                sourceList=[];
+                for ii=1:length(frameIndex)
+                    sourceList=unique([sourceList; sourceFrameTrackList(ii).pt_rc(1,:)]);
+                end
+            else
+                error('Please finish');
+                sourceTrackList=sourceTrackList(frameIndex);
+                sourceList=unique(sourceTrackList.pt_rc(:));
+                sourcePlotFormatList={'r.'};
+                sourceLinePlotFormatList={{'r','linewidth',2}};
+            end
+            
+            %             bwlabel
+            %              CH = bwconvhull(d.regionMod.mask)
+            %              http://blogs.mathworks.com/steve/2011/10/04/binary-image-convex-hull-algorithm-notes/
+            
+            %% Display the results
+            legendEntry=[];
+            sourcePtDelta_rc=zeros(2,length(frameIndex),length(sourceList));
+            totalPtDelta_rc=zeros(2,length(frameIndex));
+            for ii=1:length(frameIndex)
+                for ss=1:length(sourceList)
+                    sourceIndexes=(sourceList(ss)==sourceFrameTrackList(ii).pt_rc(1,:));
+                    sourcePtDelta_rc(:,ii,ss)=mean(trackFrameList(ii).ptDelta_rc(:,sourceIndexes),2);
+                    %                     phs=plot(sourcePtDelta_rc(2,:),sourcePtDelta_rc(1,:),sourcePlotFormatList{ss,ii});
+                    %                     hold on
+                    %                     if ii==1
+                    %                         legendEntry(ss)=phs;
+                    %                     end
+                    %                     displayArgs=sourceLinePlotFormatList{ss,ii};
+                end
+                totalPtDelta_rc(:,ii)=mean(trackFrameList(ii).ptDelta_rc,2);
+            end
+            
+            
+            figure;
+            hold on
+            sourcePlotFormatList=[{'r','g','c','b','m','y','k'}'] ;
+            for ss=1:length(sourceList)
+                plot(signedDistance(squeeze(sourcePtDelta_rc(:,:,ss)),2),sourcePlotFormatList{ss});
+            end
+            plot(signedDistance(totalPtDelta_rc,2),sourcePlotFormatList{length(sourceList)+1});
+            legend(legendEntry,sourceNameList,'interpreter','none')
+            title([this.trialData.sourceMetaFilename '. Motion track.'],'interpreter','none');
+            
+        end
+
+
+**************************************************************************************************
+**************************************************************************************************
+        %%
+        %This function will track data stored as a document as opposed to
+        %as column vectors
+        %This also returns the trackFrameList and sourceFrameTrackList which are the choosen elements
+        function [totalPtDelta_rc, sourcePtDelta_rc,badIndexList,totalPtDeltaSpeed_mm,trackFrameList,sourceFrameTrackList,statistics]=genTrackDocDB(this,frameIndex,useAllArea,trackDirection,filterConditions,trackFrameList,sourceFrameTrackList,distanceMeasure)
+            badIndexList=[];
+            
+%         p = inputParser;   % Create an instance of the class.
+%             %If this is not required then the parser gets confused if just
+%             %name value pairs are given
+%             p.addParamValue('distanceMeasure',struct([]) ,@(x) isstruct(x));            
+%             p.parse(varargin{:});
+%             distanceMeasure=p.Results.distanceMeasure;            
+            switch(nargin)
+                case 2
+                    useAllArea=true;
+                    trackDirection='forward';
+                    filterConditions=[];
+                    trackFrameList=[];
+                    sourceFrameTrackList=[];
+                    distanceMeasure=[];
+                case 3
+                    trackDirection='forward';
+                    filterConditions=[];
+                    trackFrameList=[];
+                    sourceFrameTrackList=[];
+                    distanceMeasure=[];
+                case 4
+                    filterConditions=[];
+                    trackFrameList=[];
+                    sourceFrameTrackList=[];
+                    distanceMeasure=[];
+                case 5
+                    trackFrameList=[];
+                    sourceFrameTrackList=[];
+                    distanceMeasure=[];
+                case 6
+                    sourceFrameTrackList=[];
+                    distanceMeasure=[];
+                case 7
+                    distanceMeasure=[];                    
+                case 8
+                    %do nothing
+                otherwise
+                    error('Invalid number of input arguments.');
+            end
+            
+            if isempty(distanceMeasure)
+                distanceMeasure(1).key='signedDistance';
+                distanceMeasure(end).description='Compare the signed distance';
+                distanceMeasure(end).scaleMatrix=scaleMatrix_mm;
+                distanceMeasure(end).func.name='signedDistance';
+                distanceMeasure(end).func.args.trackSignedIndex=2;
+            end
+
+            
+            if isempty(frameIndex)
+                frameIndex=(1:(this.dataBlockObj.size(3)-2));
+            else
+                %do nothing
+            end
+            
+            
+            
+            d=this.nodeDB(this.defaultNameIndex).data;
+            switch(trackDirection)
+                case 'forward'
+                    if isempty(trackFrameList) && isempty(sourceFrameTrackList)
+                        trackFrameList=d.trackList(frameIndex);
+                        sourceFrameTrackList=d.sourceTrackList(frameIndex);
+                        if isfield(d ,'metainformationTrackList')
+                            metainformationTrackList=d.metainformationTrackList;
+                        else
+                            metainformationTrackList=[];
+                        end
+                    elseif ~isempty(trackFrameList) && ~isempty(sourceFrameTrackList)
+                        
+                    else
+                        error('Either trackFrameList and sourceFrameTrackList should be both empty or both not empty.');
+                    end
+                    sourceNameList=cellfun(@(x) x.name,regexp(d.sourceFilenameList,'\\(?<name>\w+)\\results.mat$','names'),'UniformOutput',false);
+                    
+                case 'backward'
+                    if isempty(trackFrameList) && isempty(sourceFrameTrackList)
+                        trackFrameList=d.trackListBackward(frameIndex);
+                        sourceFrameTrackList=d.sourceTrackListBackward(frameIndex);
+                        if isfield(d ,'metainformationTrackListBackward')
+                            
+                            metainformationTrackList=struct('trackList',[]);
+                            for ii=1:length(d.metainformationTrackListBackward)
+                                metainformationTrackList(ii).trackList=d.metainformationTrackListBackward(ii).trackListBackward;
+                            end
+                            
+                        else
+                            metainformationTrackList=[];
+                        end
+                    elseif ~isempty(trackFrameList) && ~isempty(sourceFrameTrackList)
+                        
+                    else
+                        error('Either trackFrameList and sourceFrameTrackList should be both empty or both not empty.');
+                    end
+                    sourceNameList=cellfun(@(x) x.name,regexp(d.sourceFilenameList,'\\(?<name>\w+)\\results.mat$','names'),'UniformOutput',false);
+                    
+                otherwise
+                    error(['Unsupported track direction of ' trackDirection]);
+            end
+            
+            [sourcePlotFormatList,sourceLinePlotFormatList]= getPlotMarkers(length(sourceNameList));
+            
+            %constrainFeatureframePoints
+            if ~useAllArea
+                [trackFrameList, filterInfo]=filterTrackListAdaptive(this,trackFrameList,sourceFrameTrackList,d.regionMod,filterConditions,sourceNameList,metainformationTrackList);
+                for ii=1:length(sourceFrameTrackList)
+                    sourceFrameTrackList(ii).pt_rc(:,~filterInfo(ii).validIndexesFromOriginal)=[];
+                    %sourceFrameTrackList(ii).ptDelta_rc(~filterInfo(ii).validIndexesFromOriginal)=[];
+                    %This staement should be killed since the pt_rc and
+                    %ptDelta_rc are linked
+                end
+            else
+                error('Needs to only filter, but not select an ROI');
+                %do nothing
+            end
+            
+            
+            %this code extracts all the source types which are being used
+            if isfield(d,'sourceTrackList')
+                sourceList=[];
+                for ii=1:length(frameIndex)
+                    sourceList=unique([sourceList sourceFrameTrackList(ii).pt_rc(1,:)]);
+                end
+            else
+                error('Please finish');
+                sourceTrackList=sourceTrackList(frameIndex);
+                sourceList=unique(sourceTrackList.pt_rc(:));
+                sourcePlotFormatList={'r.'};
+                sourceLinePlotFormatList={{'r','linewidth',2}};
+            end
+            
+            %             bwlabel
+            %              CH = bwconvhull(d.regionMod.mask)
+            %              http://blogs.mathworks.com/steve/2011/10/04/binary-image-convex-hull-algorithm-notes/
+            
+            %% Sort and compute the tracks for each method.  We also compute the statistics such as the mean position for each source tracker and the std of the velocity measure
+            legendEntry=[];
+            sourcePtDelta_rc=zeros(2,length(frameIndex),length(sourceList));
+            sourcePtDelta_mm=zeros(1,length(frameIndex),length(sourceList));
+            statistics.sourceMeanPt_rc=zeros(2,length(frameIndex),length(sourceList));
+            statistics.sourceStdPtDelta_rc_mm=zeros(2,length(frameIndex),length(sourceList));
+            statistics.totalMeanPt_rc=zeros(2,length(frameIndex));
+            statistics.totalStdPtDelta_rc_mm=zeros(2,length(frameIndex));
+            
+            totalPtDelta_rc=zeros(2,length(frameIndex));
+            totalPtDeltaSpeed_mm=zeros(1,length(frameIndex));
+            scaleToMm=diag([this.dataBlockObj.getUnitsValue('axial','mm') this.dataBlockObj.getUnitsValue('lateral','mm')]);
+            for ii=1:length(frameIndex)
+                for ss=1:length(sourceList)
+                    sourceIndexes=(sourceList(ss)==sourceFrameTrackList(ii).pt_rc(1,:));
+                    
+                    sourcePtDelta_rc(:,ii,ss)=mean(trackFrameList(ii).ptDelta_rc(:,sourceIndexes),2);
+                    
+                    sourcePtDelta_mm(:,ii,ss)=sign2(sourcePtDelta_rc(2,ii,ss))*mean(sqrt(sum((scaleToMm*trackFrameList(ii).ptDelta_rc(:,sourceIndexes).^2),1)));
+                    %sourcePtDelta_mm(:,ii,ss)=sign2(mean(trackFrameList(ii).ptDelta_rc(2,sourceIndexes)))*mean(sqrt(sum((scaleToMm*trackFrameList(ii).ptDelta_rc(:,sourceIndexes)).^2,1)));
+                    statistics.sourceMeanPt_rc(:,ii,ss)=mean(trackFrameList(ii).pt_rc(:,sourceIndexes),2);
+                    statistics.sourceStdPtDelta_rc_mm(:,ii,ss)=std(scaleToMm*trackFrameList(ii).ptDelta_rc(:,sourceIndexes),[],2);
+                end
+                statistics.totalMeanPt_rc(:,ii)=mean(trackFrameList(ii).pt_rc,2);
+                statistics.totalStdPtDelta_rc_mm(:,ii)=std(scaleToMm*trackFrameList(ii).ptDelta_rc,[],2);
+                
+                totalPtDelta_rc(:,ii)=mean(trackFrameList(ii).ptDelta_rc,2);
+                totalPtDeltaSpeed_mm(:,ii)=sign2(totalPtDelta_rc(2,ii))*mean(sqrt(sum(scaleToMm*trackFrameList(ii).ptDelta_rc.^2,1)));
+                if any(isnan(totalPtDelta_rc(:,ii)))
+                    warning(['NaN detected in frame ' num2str(frameIndex(ii)) '. This normally results when no feature points match the search criteria.']);
+                    badIndexList=[badIndexList ii];
+                else
+                    %do nothing
+                end
+                
+            end
+            
+            %% This code will plot the averaged velocity as a speed
+            figure;
+            hold on
+            sourcePlotFormatList=[{'r','g','c','b','m','y','k','r:','g:'}'] ;
+            scaleToMm=diag([this.dataBlockObj.getUnitsValue('axial','mm') this.dataBlockObj.getUnitsValue('lateral','mm')]);
+            fps=this.dataBlockObj.getUnitsValue('frameRate','framePerSec');
+            
+            t_sec=(0:(length(frameIndex)-1))/fps;
+            %t_sec=(1:(length(frameIndex)));
+            
+            for ss=1:length(sourceList)
+                switch trackDirection
+                    case 'forward'
+                        phs=plot(t_sec,signedDistance(scaleToMm*squeeze(sourcePtDelta_rc(:,:,ss)),2)*fps,sourcePlotFormatList{ss});
+                    case 'backward'
+                        phs=plot(t_sec,-fliplr(signedDistance(scaleToMm*squeeze(sourcePtDelta_rc(:,:,ss)),2)*fps),sourcePlotFormatList{ss});
+                    otherwise
+                        error(['Bad track direction of ' trackDirection])
+                end
+                
+                legendEntry(ss)=phs;
+            end
+            totalPlotFormatList={'r','lineWidth',2};
+            switch trackDirection
+                case 'forward'
+                    phs=plot(t_sec,signedDistance(scaleToMm*totalPtDelta_rc,2)*fps,totalPlotFormatList{:});
+                case 'backward'
+                    phs=plot(t_sec,-fliplr(signedDistance(scaleToMm*totalPtDelta_rc,2)*fps),totalPlotFormatList{:});
+                otherwise
+                    error(['Bad track direction of ' trackDirection])
+            end
+            
+            legendEntry(end+1)=phs;
+            legend(legendEntry,{sourceNameList{sourceList},'avg using all'},'interpreter','none')
+            title([this.trialData.sourceMetaFilename '. Motion track. Direction = ' trackDirection],'interpreter','none');
+            xlabel('time (sample)')
+            ylabel('velocity mm/sec')
+            
+            if false
+                %% This function will plot the average speeds with a sign dependent on the lateral velocity sign.
+                figure;
+                hold on
+                sourcePlotFormatList=[{'r','g','c','b','m','y','k','r:','g:'}'] ;
+                fps=this.dataBlockObj.getUnitsValue('frameRate','framePerSec');
+                
+                
+                t_sec=(1:(length(frameIndex)));
+                
+                for ss=1:length(sourceList)
+                    phs=plot(t_sec,sourcePtDelta_mm(:,:,ss)*fps,sourcePlotFormatList{ss});
+                    legendEntry(ss)=phs;
+                end
+                phs=plot(t_sec,totalPtDeltaSpeed_mm*fps,sourcePlotFormatList{length(sourceList)+1});
+                legendEntry(end+1)=phs;
+                legend(legendEntry,{sourceNameList{sourceList},'avg using all'},'interpreter','none')
+                title([this.trialData.sourceMetaFilename '. Pseudovelocity Motion track. Direction = ' trackDirection],'interpreter','none');
+                xlabel('time (sample)')
+                ylabel('pseudovelocity mm/sec')
+            end
+        end
